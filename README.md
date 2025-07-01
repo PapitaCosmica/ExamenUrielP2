@@ -2,7 +2,7 @@
 
 **Integrantes del equipo:**
 - Osvaldo Soto Coronel
-- Erick Jost
+- Erick Jotsinth Argüello Hernandez
 - Juan Diego Martinez Cruz
 - Carlos Uriel Alcantar González
 
