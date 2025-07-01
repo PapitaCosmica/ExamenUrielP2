@@ -1,0 +1,124 @@
+implementacion de mejora 
+import { useState } from 'react';
+import axios from 'axios';
+
+function CreateBranchForm({ repoOwner, repoName, accessToken }) {
+  const [branchName, setBranchName] = useState('');
+  const [error, setError] = useState('');
+
+  const validateBranchName = (name) => /^rama\/integrante[1-4]$/.test(name);
+
+  const handleCreateBranch = async () => {
+    if (!validateBranchName(branchName)) {
+      setError('El nombre debe seguir el formato rama/integranteX (1-4)');
+      return;
+    }
+    try {
+      const mainBranch = await axios.get(
+        `https://api.github.com/repos/${repoOwner}/${repoName}/git/refs/heads/main`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      const mainSha = mainBranch.data.object.sha;
+
+      await axios.post(
+        `https://api.github.com/repos/${repoOwner}/${repoName}/git/refs`,
+        { ref: `refs/heads/${branchName}`, sha: mainSha },
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      alert(`Rama ${branchName} creada con éxito`);
+    } catch (err) {
+      setError('Error al crear la rama: ' + err.message);
+    }
+  };
+
+  return (
+    <div>
+      <input
+        type="text"
+        placeholder="Ej: rama/integrante1"
+        value={branchName}
+        onChange={(e) => setBranchName(e.target.value)}
+      />
+      <button onClick={handleCreateBranch}>Crear Rama</button>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+    </div>
+  );
+}
+
+
+implementacion de funcionalidad
+import Board from '@lourenci/react-kanban';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+
+function KanbanBoard({ repoOwner, repoName, accessToken }) {
+  const [board, setBoard] = useState({
+    columns: [
+      { id: 1, title: 'To Do', cards: [] },
+      { id: 2, title: 'In Progress', cards: [] },
+      { id: 3, title: 'In Review', cards: [] },
+      { id: 4, title: 'Done', cards: [] }
+    ]
+  });
+
+  useEffect(() => {
+    const fetchBranchesAndCommits = async () => {
+      const branches = await axios.get(
+        `https://api.github.com/repos/${repoOwner}/${repoName}/branches`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      const cards = branches.data
+        .filter(branch => branch.name.startsWith('rama/integrante'))
+        .map(branch => ({
+          id: branch.name,
+          title: `Tarea en ${branch.name}`,
+          description: `Último commit: ${branch.commit.sha}`,
+          columnId: branch.commit ? 2 : 1 // In Progress si hay commits
+        }));
+      setBoard(prev => ({
+        ...prev,
+        columns: prev.columns.map(col =>
+          col.id === 2 ? { ...col, cards } : col
+        )
+      }));
+    };
+    fetchBranchesAndCommits();
+  }, [repoOwner, repoName, accessToken]);
+
+  return <Board initialBoard={board} allowAddCard onCardDragEnd={(board, card, source, destination) => {
+    // Actualizar estado en backend o GitHub si se mueve la tarjeta
+  }} />;
+}
+
+
+
+funcionalidad backend 
+app.get('/tasks', async (req, res) => {
+  const { repoOwner, repoName, accessToken } = req.query;
+  const branches = await axios.get(
+    `https://api.github.com/repos/${repoOwner}/${repoName}/branches`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+  const tasks = branches.data
+    .filter(b => b.name.startsWith('rama/integrante'))
+    .map(b => ({
+      branch: b.name,
+      status: b.commit ? 'In Progress' : 'To Do',
+      lastCommit: b.commit?.sha
+    }));
+  res.json(tasks);
+});
+
+
+
+
+
+mejora backend
+app.post('/create-branch', async (req, res) => {
+  const { repoOwner, repoName, branchName, accessToken } = req.body;
+  if (!/^rama\/integrante[1-4]$/.test(branchName)) {
+    return res.status(400).json({ error: 'Formato de rama inválido' });
+  }
+  // Lógica similar a la del frontend para crear la rama
+  // Enviar notificación (ejemplo: WebSocket o email)
+});
