@@ -72,3 +72,4 @@ temp/
    * Después, tu PR para esta rama fusionará el .gitignore a main, y esas reglas se aplicarán para todos.
 Este proceso, aunque requiere un poco de práctica, asegura un desarrollo colaborativo organizado y robusto.
 
+.....
