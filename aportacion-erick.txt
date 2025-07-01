@@ -1,0 +1,1 @@
+Funcionalidad propuesta: Carrito de compras para el sistema web
