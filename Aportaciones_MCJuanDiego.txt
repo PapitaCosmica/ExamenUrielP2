@@ -89,3 +89,36 @@ function KanbanBoard({ repoOwner, repoName, accessToken }) {
     // Actualizar estado en backend o GitHub si se mueve la tarjeta
   }} />;
 }
+
+
+
+funcionalidad backend 
+app.get('/tasks', async (req, res) => {
+  const { repoOwner, repoName, accessToken } = req.query;
+  const branches = await axios.get(
+    `https://api.github.com/repos/${repoOwner}/${repoName}/branches`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+  const tasks = branches.data
+    .filter(b => b.name.startsWith('rama/integrante'))
+    .map(b => ({
+      branch: b.name,
+      status: b.commit ? 'In Progress' : 'To Do',
+      lastCommit: b.commit?.sha
+    }));
+  res.json(tasks);
+});
+
+
+
+
+
+mejora backend
+app.post('/create-branch', async (req, res) => {
+  const { repoOwner, repoName, branchName, accessToken } = req.body;
+  if (!/^rama\/integrante[1-4]$/.test(branchName)) {
+    return res.status(400).json({ error: 'Formato de rama inválido' });
+  }
+  // Lógica similar a la del frontend para crear la rama
+  // Enviar notificación (ejemplo: WebSocket o email)
+});
