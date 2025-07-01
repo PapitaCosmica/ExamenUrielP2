@@ -1,1 +1,2 @@
 Mi propuesta es agregar una sección de inicio de sesión con autenticación.
+También incluiría verificación de correo y recuperación de contraseña mediante enlace seguro.
