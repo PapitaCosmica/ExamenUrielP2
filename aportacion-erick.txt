@@ -1,1 +1,2 @@
 Funcionalidad propuesta: Carrito de compras para el sistema web
+- Mejora: validación de stock y control de disponibilidad
